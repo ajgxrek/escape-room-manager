@@ -16,15 +16,18 @@ export async function POST(req: Request) {
 
     try {
         event = stripe.webhooks.constructEvent(body, signature, webhookSecret)
-    } catch (error: any) {
-        return new NextResponse(`Webhook Error: ${error.message}`, { status: 400 })
+    } catch (error) {
+        // ZMIANA TUTAJ: Bezpieczna obsługa błędu bez użycia 'any'
+        let message = 'Wystąpił nieznany błąd.';
+        if (error instanceof Error) {
+            message = error.message;
+        }
+        return new NextResponse(`Webhook Error: ${message}`, { status: 400 })
     }
 
     if (event.type === 'checkout.session.completed') {
         const session = event.data.object as Stripe.Checkout.Session;
         const bookingId = session.metadata?.bookingId;
-
-        console.log(`Webhook otrzymany dla rezerwacji o ID: ${bookingId}`);
 
         if (bookingId) {
             const updatedBooking = await prisma.booking.update({
@@ -36,21 +39,15 @@ export async function POST(req: Request) {
                 }
             });
 
-
-            console.log('Dane rezerwacji do wysłania e-maila:', updatedBooking);
-
             try {
                 await resend.emails.send({
-                    from: 'Escape Room <onboarding@resend.dev>',
+                    from: 'Booking <onboarding@resend.dev>',
                     to: updatedBooking.customerEmail,
                     subject: `Potwierdzenie rezerwacji pokoju: ${updatedBooking.room.name}`,
                     text: `Cześć ${updatedBooking.customerName},\n\nTwoja rezerwacja na ${updatedBooking.timeSlot.date.toLocaleDateString('pl-PL')} o godzinie ${updatedBooking.timeSlot.startTime} została potwierdzona.\n\nDziękujemy!`,
                 });
-
-                console.log(`E-mail pomyślnie przekazany do Resend dla: ${updatedBooking.customerEmail}`);
-
             } catch (emailError) {
-                console.error("Błąd podczas próby wysłania e-maila:", emailError);
+                console.error("Błąd wysyłania e-maila:", emailError);
             }
         }
     }
