@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
 
 type BookingFormProps = {
     room: {
@@ -15,7 +14,7 @@ type BookingFormProps = {
     userId: string
     userEmail: string
     userName: string
-    userPhone: string | null // <-- ZMIANA 1: Dodajemy nowy prop
+    userPhone: string | null
 }
 
 type TimeSlot = {
@@ -24,7 +23,6 @@ type TimeSlot = {
 }
 
 export default function BookingForm({ room, userId, userEmail, userName, userPhone }: BookingFormProps) {
-    const router = useRouter()
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState("")
     const [availableSlots, setAvailableSlots] = useState<TimeSlot[]>([])
@@ -36,21 +34,45 @@ export default function BookingForm({ room, userId, userEmail, userName, userPho
         playerCount: room.minPlayers,
         customerName: userName || "",
         customerEmail: userEmail || "",
-        customerPhone: userPhone || "", // <-- ZMIANA 2: Ustawiamy wartość początkową
+        customerPhone: userPhone || "",
         notes: "",
     })
 
-    // ... (reszta komponentu, czyli useEffect, fetchAvailableSlots, handleSubmit i JSX, pozostaje bez zmian) ...
-    // ... (skopiuj tylko powyższy fragment, reszta jest taka sama)
-    // ...
-    // ...
+    // TEN FRAGMENT BYŁ POMINIĘTY
+    useEffect(() => {
+        if (formData.date) {
+            fetchAvailableSlots(formData.date)
+        } else {
+            setAvailableSlots([])
+        }
+    }, [formData.date])
+
+    // TA FUNKCJA BYŁA POMINIĘTA
+    const fetchAvailableSlots = async (date: string) => {
+        setLoadingSlots(true)
+        setError("")
+        try {
+            const response = await fetch(`/api/available-slots?roomId=${room.id}&date=${date}`)
+            const data = await response.json()
+
+            if (response.ok) {
+                setAvailableSlots(data.slots)
+            } else {
+                setError("Nie udało się pobrać dostępnych terminów")
+            }
+        } catch (err) {
+            setError("Wystąpił błąd podczas pobierania terminów")
+        } finally {
+            setLoadingSlots(false)
+        }
+    }
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setLoading(true)
         setError("")
 
         try {
-
             const response = await fetch("/api/checkout-sessions", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -107,9 +129,9 @@ export default function BookingForm({ room, userId, userEmail, userName, userPho
 
                     {loadingSlots ? (
                         <div className="text-center py-4">Ładowanie dostępnych godzin...</div>
-                    ) : (
+                    ) : availableSlots.length > 0 ? (
                         <div className="grid grid-cols-3 gap-3">
-                            {availableSlots.map((slot) => (
+                            {availableSlots.map((slot: TimeSlot) => (
                                 <button
                                     key={slot.time}
                                     type="button"
@@ -128,6 +150,8 @@ export default function BookingForm({ room, userId, userEmail, userName, userPho
                                 </button>
                             ))}
                         </div>
+                    ) : (
+                        <div className="text-center py-4 text-black-300">Brak dostępnych terminów w tym dniu.</div>
                     )}
                 </div>
             )}
@@ -202,7 +226,7 @@ export default function BookingForm({ room, userId, userEmail, userName, userPho
                 disabled={loading || !formData.time}
                 className="w-full bg-primary hover:bg-primary/90 text-white font-bold text-[18px] py-4 rounded-[12px] border-[3px] border-black shadow-200 hover:shadow-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
-                {loading ? "Rezerwuję..." : "Przejdź do płatności."}
+                {loading ? "Tworzenie płatności..." : "Przejdź do płatności"}
             </button>
         </form>
     )
