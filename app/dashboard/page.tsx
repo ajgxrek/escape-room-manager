@@ -12,16 +12,10 @@ async function getUserBookings(userId: string) {
     return bookings;
 }
 
-// ZMIANA TUTAJ: Definiujemy typ propsów lokalnie, aby uniknąć konfliktów
-type DashboardPageProps = {
-    searchParams: {
-        status?: string;
-        booking_success?: string;
-        booking_cancelled?: string;
-    }
-}
-
-export default async function DashboardPage({ searchParams }: DashboardPageProps) {
+// Używamy najbardziej standardowej, oficjalnej sygnatury dla strony
+export default async function DashboardPage({ searchParams }: {
+    searchParams: { [key: string]: string | string[] | undefined }
+}) {
     const session = await auth();
     if (!session?.user?.id) {
         redirect('/api/auth/signin?callbackUrl=/dashboard');
@@ -30,9 +24,10 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     const user = await prisma.user.findUnique({ where: { id: session.user.id } });
     const bookings = await getUserBookings(session.user.id);
 
-    // Odczytujemy wszystkie możliwe statusy z URL
-    const profileStatus = searchParams.status;
-    const bookingStatus = searchParams.booking_success ? 'success' : searchParams.booking_cancelled ? 'cancelled' : null;
+    // Odczytujemy statusy z URL
+    const profileStatus = searchParams?.status;
+    const bookingSuccess = searchParams?.booking_success;
+    const bookingCancelled = searchParams?.booking_cancelled;
 
     return (
         <div className="section_container min-h-screen">
@@ -43,60 +38,30 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                     <form action={updateUserProfile} className="space-y-4">
                         <div>
                             <label htmlFor="name" className="font-semibold">Imię i nazwisko</label>
-                            <input
-                                type="text"
-                                name="name"
-                                defaultValue={user?.name ?? ''}
-                                className="w-full mt-1 p-2 border-[3px] border-black rounded-[12px]"
-                            />
+                            <input type="text" name="name" defaultValue={user?.name ?? ''} className="w-full mt-1 p-2 border-[3px] border-black rounded-[12px]" />
                         </div>
                         <div>
                             <label htmlFor="phone" className="font-semibold">Numer telefonu</label>
-                            <input
-                                type="tel"
-                                name="phone"
-                                defaultValue={user?.phone ?? ''}
-                                className="w-full mt-1 p-2 border-[3px] border-black rounded-[12px]"
-                                placeholder="Twój numer telefonu"
-                            />
+                            <input type="tel" name="phone" defaultValue={user?.phone ?? ''} className="w-full mt-1 p-2 border-[3px] border-black rounded-[12px]" placeholder="Twój numer telefonu" />
                         </div>
                         <div>
                             <label className="font-semibold">E-mail</label>
                             <p className="text-black-300 mt-1">{user?.email}</p>
                         </div>
                         <div className="text-center pt-4">
-                            <button type="submit" className="startup-form_btn max-w-xs">
-                                Zapisz zmiany
-                            </button>
+                            <button type="submit" className="startup-form_btn max-w-xs">Zapisz zmiany</button>
                         </div>
                     </form>
 
-                    {profileStatus === 'success' && (
-                        <p className="text-center text-green-500 font-semibold mt-4">
-                            Zmiany w profilu zapisano pomyślnie!
-                        </p>
-                    )}
-                    {profileStatus === 'error' && (
-                        <p className="text-center text-red-500 font-semibold mt-4">
-                            Wystąpił błąd podczas zapisywania zmian.
-                        </p>
-                    )}
+                    {profileStatus === 'success' && (<p className="text-center text-green-500 font-semibold mt-4">Zmiany w profilu zapisano pomyślnie!</p>)}
+                    {profileStatus === 'error' && (<p className="text-center text-red-500 font-semibold mt-4">Wystąpił błąd podczas zapisywania zmian.</p>)}
                 </div>
             </div>
 
             <h2 className="text-30-bold mb-8">Moje Rezerwacje</h2>
 
-            {/* Komunikat o statusie rezerwacji */}
-            {bookingStatus === 'success' && (
-                <div className="bg-green-100 border-[3px] border-green-500 text-green-700 p-4 rounded-[12px] mb-6 text-center font-semibold">
-                    Twoja rezerwacja i płatność zakończyły się sukcesem!
-                </div>
-            )}
-            {bookingStatus === 'cancelled' && (
-                <div className="bg-yellow-100 border-[3px] border-yellow-500 text-yellow-700 p-4 rounded-[12px] mb-6 text-center font-semibold">
-                    Twoja rezerwacja została anulowana.
-                </div>
-            )}
+            {bookingSuccess && (<div className="bg-green-100 border-[3px] border-green-500 text-green-700 p-4 rounded-[12px] mb-6 text-center font-semibold">Twoja rezerwacja i płatność zakończyły się sukcesem!</div>)}
+            {bookingCancelled && (<div className="bg-yellow-100 border-[3px] border-yellow-500 text-yellow-700 p-4 rounded-[12px] mb-6 text-center font-semibold">Twoja rezerwacja została anulowana.</div>)}
 
             {bookings.length === 0 ? (
                 <p className="text-center text-black-300">Nie masz jeszcze żadnych aktywnych rezerwacji.</p>
@@ -107,9 +72,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                             <div>
                                 <h2 className="text-20-medium">{booking.room.name}</h2>
                                 <p className="text-16-medium text-black-300 mt-1">
-                                    {new Date(booking.timeSlot.date).toLocaleDateString('pl-PL', {
-                                        year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC',
-                                    })}
+                                    {new Date(booking.timeSlot.date).toLocaleDateString('pl-PL', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' })}
                                     , godz. {booking.timeSlot.startTime}
                                 </p>
                             </div>
@@ -117,21 +80,15 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                                 {booking.status === 'PENDING' && (
                                     <form action={retryPayment}>
                                         <input type="hidden" name="bookingId" value={booking.id} />
-                                        <button type="submit" className="font-semibold text-white bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-full">
-                                            Zapłać
-                                        </button>
+                                        <button type="submit" className="font-semibold text-white bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-full">Zapłać</button>
                                     </form>
                                 )}
-                                <span className={`px-4 py-2 rounded-full font-semibold text-white ${
-                                    booking.status === 'CONFIRMED' ? 'bg-green-500' : 'bg-yellow-500'
-                                }`}>
+                                <span className={`px-4 py-2 rounded-full font-semibold text-white ${ booking.status === 'CONFIRMED' ? 'bg-green-500' : 'bg-yellow-500' }`}>
                                     {booking.status === 'CONFIRMED' ? 'Potwierdzona' : 'Oczekująca'}
                                 </span>
                                 <form action={cancelBooking}>
                                     <input type="hidden" name="bookingId" value={booking.id} />
-                                    <button type="submit" className="font-semibold text-white bg-red-500 hover:bg-red-600 px-4 py-2 rounded-full">
-                                        Anuluj
-                                    </button>
+                                    <button type="submit" className="font-semibold text-white bg-red-500 hover:bg-red-600 px-4 py-2 rounded-full">Anuluj</button>
                                 </form>
                             </div>
                         </div>
