@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { signIn } from "next-auth/react"
 
 type BookingFormProps = {
     room: {
@@ -11,7 +12,7 @@ type BookingFormProps = {
         maxPlayers: number
         price: number
     }
-    userId: string
+    userId: string | undefined // Może być niezdefiniowany dla gościa
     userEmail: string
     userName: string
     userPhone: string | null
@@ -38,7 +39,22 @@ export default function BookingForm({ room, userId, userEmail, userName, userPho
         notes: "",
     })
 
-    // TEN FRAGMENT BYŁ POMINIĘTY
+    // Efekt przywracający dane z localStorage po powrocie z logowania
+    useEffect(() => {
+        const pendingBookingData = localStorage.getItem('pendingBooking');
+        if (pendingBookingData) {
+            try {
+                const pendingBooking = JSON.parse(pendingBookingData);
+                // Uzupełniamy formularz zapisanymi danymi
+                setFormData(prevData => ({ ...prevData, ...pendingBooking }));
+            } catch (e) {
+                console.error("Błąd parsowania danych rezerwacji:", e);
+            }
+            // Czyścimy localStorage po użyciu
+            localStorage.removeItem('pendingBooking');
+        }
+    }, []); // Uruchamiamy tylko raz, po załadowaniu komponentu
+
     useEffect(() => {
         if (formData.date) {
             fetchAvailableSlots(formData.date)
@@ -47,7 +63,6 @@ export default function BookingForm({ room, userId, userEmail, userName, userPho
         }
     }, [formData.date])
 
-    // TA FUNKCJA BYŁA POMINIĘTA
     const fetchAvailableSlots = async (date: string) => {
         setLoadingSlots(true)
         setError("")
@@ -69,9 +84,19 @@ export default function BookingForm({ room, userId, userEmail, userName, userPho
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
-        setLoading(true)
         setError("")
 
+        // Jeśli użytkownik NIE JEST zalogowany
+        if (!userId) {
+            // Zapisujemy dane z formularza w pamięci przeglądarki
+            localStorage.setItem('pendingBooking', JSON.stringify(formData));
+            // Rozpoczynamy proces logowania przez Google, mówiąc mu, żeby tu wrócił
+            signIn('google', { callbackUrl: window.location.href });
+            return; // Zatrzymujemy dalsze działanie
+        }
+
+        // Jeśli użytkownik JEST zalogowany, kontynuujemy jak wcześniej
+        setLoading(true)
         try {
             const response = await fetch("/api/checkout-sessions", {
                 method: "POST",
@@ -126,7 +151,6 @@ export default function BookingForm({ room, userId, userEmail, userName, userPho
             {formData.date && (
                 <div>
                     <label className="block text-16-medium font-semibold mb-3">Wybierz godzinę *</label>
-
                     {loadingSlots ? (
                         <div className="text-center py-4">Ładowanie dostępnych godzin...</div>
                     ) : availableSlots.length > 0 ? (
@@ -158,62 +182,27 @@ export default function BookingForm({ room, userId, userEmail, userName, userPho
 
             <div>
                 <label className="block text-16-medium font-semibold mb-2">Liczba graczy *</label>
-                <input
-                    type="number"
-                    required
-                    min={room.minPlayers}
-                    max={room.maxPlayers}
-                    value={formData.playerCount}
-                    onChange={(e) => setFormData({ ...formData, playerCount: parseInt(e.target.value) })}
-                    className={inputClass}
-                />
+                <input type="number" required min={room.minPlayers} max={room.maxPlayers} value={formData.playerCount} onChange={(e) => setFormData({ ...formData, playerCount: parseInt(e.target.value) })} className={inputClass} />
             </div>
 
             <div>
                 <label className="block text-16-medium font-semibold mb-2">Imię i nazwisko *</label>
-                <input
-                    type="text"
-                    required
-                    value={formData.customerName}
-                    onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
-                    className={inputClass}
-                    placeholder="Jan Kowalski"
-                />
+                <input type="text" required value={formData.customerName} onChange={(e) => setFormData({ ...formData, customerName: e.target.value })} className={inputClass} placeholder="Jan Kowalski" />
             </div>
 
             <div>
                 <label className="block text-16-medium font-semibold mb-2">Email *</label>
-                <input
-                    type="email"
-                    required
-                    value={formData.customerEmail}
-                    onChange={(e) => setFormData({ ...formData, customerEmail: e.target.value })}
-                    className={inputClass}
-                    placeholder="jan@example.com"
-                />
+                <input type="email" required value={formData.customerEmail} onChange={(e) => setFormData({ ...formData, customerEmail: e.target.value })} className={inputClass} placeholder="jan@example.com" />
             </div>
 
             <div>
                 <label className="block text-16-medium font-semibold mb-2">Telefon *</label>
-                <input
-                    type="tel"
-                    required
-                    placeholder="+48 123 456 789"
-                    value={formData.customerPhone}
-                    onChange={(e) => setFormData({ ...formData, customerPhone: e.target.value })}
-                    className={inputClass}
-                />
+                <input type="tel" required placeholder="+48 123 456 789" value={formData.customerPhone} onChange={(e) => setFormData({ ...formData, customerPhone: e.target.value })} className={inputClass} />
             </div>
 
             <div>
                 <label className="block text-16-medium font-semibold mb-2">Dodatkowe uwagi</label>
-                <textarea
-                    rows={4}
-                    value={formData.notes}
-                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                    className={inputClass}
-                    placeholder="Czy masz jakieś specjalne wymagania?"
-                />
+                <textarea rows={4} value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} className={inputClass} placeholder="Czy masz jakieś specjalne wymagania?" />
             </div>
 
             <div className="bg-primary-100 p-6 rounded-[12px] border-[3px] border-black text-center">
@@ -226,7 +215,7 @@ export default function BookingForm({ room, userId, userEmail, userName, userPho
                 disabled={loading || !formData.time}
                 className="w-full bg-primary hover:bg-primary/90 text-white font-bold text-[18px] py-4 rounded-[12px] border-[3px] border-black shadow-200 hover:shadow-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
-                {loading ? "Tworzenie płatności..." : "Przejdź do płatności"}
+                {loading ? "Przekierowuję..." : (userId ? "Przejdź do płatności" : "Zaloguj się i zapłać")}
             </button>
         </form>
     )

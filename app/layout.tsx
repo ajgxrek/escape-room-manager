@@ -3,6 +3,8 @@ import "./globals.css";
 import { Work_Sans } from "next/font/google";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
+import { auth } from "@/auth";
+import { SessionProvider } from "next-auth/react";
 
 const workSans = Work_Sans({
     subsets: ['latin'],
@@ -15,17 +17,24 @@ export const metadata: Metadata = {
     description: "Zarządzanie escape roomem",
 };
 
-export default function RootLayout({
-                                       children,
-                                   }: Readonly<{
+export default async function RootLayout({
+                                             children,
+                                         }: Readonly<{
     children: React.ReactNode;
 }>) {
+    // Pobieramy sesję na serwerze, aby przekazać ją do Providera
+    const session = await auth();
     return (
         <html lang="pl">
         <body className={`${workSans.variable} bg-gray-50`}>
-        <Navbar />
-        {children}
-        <Footer />
+        {/* SessionProvider jest niezbędny do użycia `signIn` w komponentach klienckich */}
+        <SessionProvider session={session}>
+            <Navbar />
+            <main className="min-h-screen">
+                {children}
+            </main>
+            <Footer />
+        </SessionProvider>
         </body>
         </html>
     );
