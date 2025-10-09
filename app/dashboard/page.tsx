@@ -3,7 +3,8 @@ import { prisma } from "@/lib/prisma"
 import { redirect } from "next/navigation"
 import { cancelBooking, retryPayment, updateUserProfile } from "./actions";
 
-async function getUserBookdings(userId: string) {
+// ZMIANA TUTAJ: Poprawiona nazwa funkcji z "Bookdings" na "Bookings"
+async function getUserBookings(userId: string) {
     const bookings = await prisma.booking.findMany({
         where: { userId: userId, NOT: { status: 'CANCELLED' } },
         include: { room: true, timeSlot: true },
@@ -12,7 +13,6 @@ async function getUserBookdings(userId: string) {
     return bookings;
 }
 
-// ZMIANA TUTAJ: Zamiast `Promise<any>`, dajemy bardziej szczegółowy typ
 export default async function DashboardPage({ searchParams }: {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
