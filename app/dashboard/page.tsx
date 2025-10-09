@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma"
 import { redirect } from "next/navigation"
 import { cancelBooking, retryPayment, updateUserProfile } from "./actions";
 
-async function getUserBookings(userId: string) {
+async function getUserBookdings(userId: string) {
     const bookings = await prisma.booking.findMany({
         where: { userId: userId, NOT: { status: 'CANCELLED' } },
         include: { room: true, timeSlot: true },
@@ -12,7 +12,10 @@ async function getUserBookings(userId: string) {
     return bookings;
 }
 
-export default async function DashboardPage({ searchParams }: { searchParams: Promise<any> }) {
+// ZMIANA TUTAJ: Zamiast `Promise<any>`, dajemy bardziej szczegółowy typ
+export default async function DashboardPage({ searchParams }: {
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}) {
     const session = await auth();
     if (!session?.user?.id) {
         redirect('/api/auth/signin?callbackUrl=/dashboard');
