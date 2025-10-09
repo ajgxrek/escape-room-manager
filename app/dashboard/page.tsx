@@ -12,8 +12,16 @@ async function getUserBookings(userId: string) {
     return bookings;
 }
 
-// ZMIANA TUTAJ: Dodajemy `searchParams` do propsów strony
-export default async function DashboardPage({ searchParams }: { searchParams: { status?: string } }) {
+// ZMIANA TUTAJ: Definiujemy typ propsów lokalnie, aby uniknąć konfliktów
+type DashboardPageProps = {
+    searchParams: {
+        status?: string;
+        booking_success?: string;
+        booking_cancelled?: string;
+    }
+}
+
+export default async function DashboardPage({ searchParams }: DashboardPageProps) {
     const session = await auth();
     if (!session?.user?.id) {
         redirect('/api/auth/signin?callbackUrl=/dashboard');
@@ -21,7 +29,10 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
 
     const user = await prisma.user.findUnique({ where: { id: session.user.id } });
     const bookings = await getUserBookings(session.user.id);
-    const status = searchParams.status; // Odczytujemy status z URL
+
+    // Odczytujemy wszystkie możliwe statusy z URL
+    const profileStatus = searchParams.status;
+    const bookingStatus = searchParams.booking_success ? 'success' : searchParams.booking_cancelled ? 'cancelled' : null;
 
     return (
         <div className="section_container min-h-screen">
@@ -53,7 +64,6 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
                             <label className="font-semibold">E-mail</label>
                             <p className="text-black-300 mt-1">{user?.email}</p>
                         </div>
-                        {/* ZMIANA TUTAJ: Wyśrodkowany przycisk */}
                         <div className="text-center pt-4">
                             <button type="submit" className="startup-form_btn max-w-xs">
                                 Zapisz zmiany
@@ -61,13 +71,12 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
                         </div>
                     </form>
 
-                    {/* ZMIANA TUTAJ: Logika wyświetlania komunikatu */}
-                    {status === 'success' && (
+                    {profileStatus === 'success' && (
                         <p className="text-center text-green-500 font-semibold mt-4">
-                            Zmiany zapisano pomyślnie!
+                            Zmiany w profilu zapisano pomyślnie!
                         </p>
                     )}
-                    {status === 'error' && (
+                    {profileStatus === 'error' && (
                         <p className="text-center text-red-500 font-semibold mt-4">
                             Wystąpił błąd podczas zapisywania zmian.
                         </p>
@@ -76,6 +85,19 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
             </div>
 
             <h2 className="text-30-bold mb-8">Moje Rezerwacje</h2>
+
+            {/* Komunikat o statusie rezerwacji */}
+            {bookingStatus === 'success' && (
+                <div className="bg-green-100 border-[3px] border-green-500 text-green-700 p-4 rounded-[12px] mb-6 text-center font-semibold">
+                    Twoja rezerwacja i płatność zakończyły się sukcesem!
+                </div>
+            )}
+            {bookingStatus === 'cancelled' && (
+                <div className="bg-yellow-100 border-[3px] border-yellow-500 text-yellow-700 p-4 rounded-[12px] mb-6 text-center font-semibold">
+                    Twoja rezerwacja została anulowana.
+                </div>
+            )}
+
             {bookings.length === 0 ? (
                 <p className="text-center text-black-300">Nie masz jeszcze żadnych aktywnych rezerwacji.</p>
             ) : (
