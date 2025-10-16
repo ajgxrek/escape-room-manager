@@ -12,7 +12,7 @@ export default async function Navbar() {
                 </Link>
 
                 <div className="flex items-center gap-5">
-                    {session && session?.user ? (
+                    {session && session.user ? (
                         <>
                             <form
                                 action={async () => {
@@ -25,10 +25,22 @@ export default async function Navbar() {
                                 </button>
                             </form>
 
-                            {/* ZMIANA TUTAJ */}
-                            <Link href="/dashboard">
-                                <span className="text-16-medium">{session?.user?.name}</span>
-                            </Link>
+                            {/* ZMIANA TUTAJ: Warunkowy link w zależności od roli */}
+                            {session.user.role === 'ADMIN' ? (
+                                // Jeśli użytkownik jest adminem, link prowadzi do /admin
+                                <Link href="/admin">
+                                    <span className="text-16-medium font-bold text-primary hover:underline">
+                                        {session.user.name} (Panel Admina)
+                                    </span>
+                                </Link>
+                            ) : (
+                                // W przeciwnym razie, link prowadzi do /dashboard
+                                <Link href="/dashboard">
+                                    <span className="text-16-medium hover:underline">
+                                        {session.user.name}
+                                    </span>
+                                </Link>
+                            )}
                         </>
                     ) : (
                         <form
