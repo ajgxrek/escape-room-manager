@@ -6,6 +6,11 @@ import { Resend } from 'resend'
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+// Definiujemy typ dla stanu akcji serwera
+type ActionState = {
+    message: string;
+}
+
 async function deleteRoom(formData: FormData) {
     'use server'
     const id = formData.get('id') as string;
@@ -65,8 +70,8 @@ async function cancelBookingAsAdmin(formData: FormData) {
     revalidatePath('/admin');
 }
 
-// ZMIANA TUTAJ: Aktualizujemy sygnaturę funkcji
-async function updateBookingStatus(prevState: any, formData: FormData): Promise<{ message: string }> {
+// ZMIANA TUTAJ: Używamy naszego nowego typu `ActionState` zamiast `any`
+async function updateBookingStatus(prevState: ActionState, formData: FormData): Promise<ActionState> {
     'use server'
     const bookingId = formData.get('bookingId') as string;
     const newStatus = formData.get('status') as string;
@@ -82,7 +87,7 @@ async function updateBookingStatus(prevState: any, formData: FormData): Promise<
         });
 
         revalidatePath('/admin');
-        return { message: `Status zmieniono na ${newStatus}` }; // Zwracamy komunikat o sukcesie
+        return { message: `Status zmieniono na ${newStatus}` };
     } catch (error) {
         return { message: 'Błąd: Nie udało się zaktualizować statusu.' };
     }

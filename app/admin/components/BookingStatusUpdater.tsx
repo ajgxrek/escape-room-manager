@@ -1,17 +1,21 @@
 "use client"
 
 import type { Booking } from "@prisma/client";
-// ZMIANA TUTAJ: Importujemy `useActionState` z `react`
 import { useActionState } from "react";
+
+// Definiujemy typ dla stanu akcji serwera
+type ActionState = {
+    message: string;
+}
 
 // Definiujemy typy propsów, które komponent będzie przyjmował
 type BookingStatusUpdaterProps = {
     booking: Booking;
     possibleStatus: string[];
-    updateAction: (prevState: any, formData: FormData) => Promise<{ message: string }>;
+    // Używamy precyzyjnego typu `ActionState` zamiast `any`
+    updateAction: (prevState: ActionState, formData: FormData) => Promise<ActionState>;
 }
 
-// Funkcja do generowania klas CSS na podstawie statusu
 const getStatusClasses = (status: string) => {
     switch (status) {
         case 'CONFIRMED': return 'bg-green-100 text-green-800';
@@ -24,25 +28,26 @@ const getStatusClasses = (status: string) => {
 
 export default function BookingStatusUpdater({ booking, possibleStatus, updateAction }: BookingStatusUpdaterProps) {
 
-    // ZMIANA TUTAJ: Używamy nowego hooka `useActionState`
     const [state, formAction] = useActionState(updateAction, { message: '' });
 
     return (
-        <form action={formAction}>
-            <input type="hidden" name="bookingId" value={booking.id} />
-            <select
-                name="status"
-                defaultValue={booking.status}
-                // Automatycznie wysyła formularz po każdej zmianie
-                onChange={(e) => e.currentTarget.form?.requestSubmit()}
-                className={`px-2 py-1 text-xs font-semibold rounded-full border-none appearance-none ${getStatusClasses(booking.status)}`}
-            >
-                {possibleStatus.map(status => (
-                    <option key={status} value={status}>{status}</option>
-                ))}
-            </select>
-            {/* Możemy tu w przyszłości wyświetlać komunikat o sukcesie/błędzie ze `state.message` */}
-        </form>
+        <div>
+            <form action={formAction}>
+                <input type="hidden" name="bookingId" value={booking.id} />
+                <select
+                    name="status"
+                    defaultValue={booking.status}
+                    onChange={(e) => e.currentTarget.form?.requestSubmit()}
+                    className={`px-2 py-1 text-xs font-semibold rounded-full border-none appearance-none ${getStatusClasses(booking.status)}`}
+                >
+                    {possibleStatus.map(status => (
+                        <option key={status} value={status}>{status}</option>
+                    ))}
+                </select>
+            </form>
+            {/* Wyświetlamy komunikat, naprawiając ostrzeżenie o nieużywanym `state` */}
+            {state.message && <p className="text-xs text-gray-500 mt-1">{state.message}</p>}
+        </div>
     );
 }
 
