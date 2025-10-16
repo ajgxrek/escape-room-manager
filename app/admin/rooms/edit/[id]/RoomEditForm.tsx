@@ -1,17 +1,11 @@
 "use client"
-
 import type { Room } from "@prisma/client"
 import { updateRoom } from "./actions"
+import ImageUploader from "@/app/admin/components/ImageUploader"
 
-type RoomEditFormProps = {
-    room: Room
-}
-
-export default function RoomEditForm({ room }: RoomEditFormProps) {
+export default function RoomEditForm({ room }: { room: Room }) {
     return (
-        // ZMIANA TUTAJ: Podłączamy naszą akcję serwera do formularza
         <form action={updateRoom} className="space-y-6 max-w-2xl mx-auto">
-            {/* Musimy przekazać ID pokoju do akcji, aby wiedziała, co aktualizować */}
             <input type="hidden" name="id" value={room.id} />
 
             <div>
@@ -30,6 +24,10 @@ export default function RoomEditForm({ room }: RoomEditFormProps) {
                 <label htmlFor="description" className="startup-form_label">Opis</label>
                 <textarea name="description" required defaultValue={room.description} className="w-full startup-form_textarea" rows={6} />
             </div>
+
+            {/* Dodajemy komponent do zarządzania zdjęciami */}
+            <ImageUploader existingImages={room.images} />
+
             <div>
                 <label htmlFor="duration" className="startup-form_label">Czas trwania (min)</label>
                 <input type="number" name="duration" required defaultValue={room.duration} className="w-full startup-form_input" />
@@ -44,15 +42,19 @@ export default function RoomEditForm({ room }: RoomEditFormProps) {
                     <input type="number" name="maxPlayers" required defaultValue={room.maxPlayers} className="w-full startup-form_input" />
                 </div>
             </div>
-            <div className="flex items-center gap-4">
-                <input
-                    id="isActive"
-                    name="isActive"
-                    type="checkbox"
-                    defaultChecked={room.isActive}
-                    className="h-6 w-6 rounded border-gray-300 text-primary focus:ring-primary"
-                />
-                <label htmlFor="isActive" className="font-semibold">Pokój jest aktywny i widoczny dla klientów</label>
+            <div className="relative flex items-start">
+                <div className="flex h-6 items-center">
+                    <input
+                        id="isActive"
+                        name="isActive"
+                        type="checkbox"
+                        defaultChecked={room.isActive}
+                        className="h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary"
+                    />
+                </div>
+                <div className="ml-3 text-sm leading-6">
+                    <label htmlFor="isActive" className="font-semibold text-gray-900">Pokój jest aktywny i widoczny dla klientów</label>
+                </div>
             </div>
             <div className="pt-4">
                 <button type="submit" className="startup-form_btn">
@@ -62,4 +64,3 @@ export default function RoomEditForm({ room }: RoomEditFormProps) {
         </form>
     )
 }
-

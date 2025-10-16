@@ -6,6 +6,11 @@ import { redirect } from 'next/navigation'
 
 export async function updateRoom(formData: FormData) {
     const id = formData.get('id') as string
+    if (!id) {
+        throw new Error('Brak ID pokoju.')
+    }
+
+    // Odczytujemy wszystkie dane z formularza
     const name = formData.get('name') as string
     const slug = formData.get('slug') as string
     const price = parseFloat(formData.get('price') as string)
@@ -13,12 +18,16 @@ export async function updateRoom(formData: FormData) {
     const duration = parseInt(formData.get('duration') as string)
     const minPlayers = parseInt(formData.get('minPlayers') as string)
     const maxPlayers = parseInt(formData.get('maxPlayers') as string)
-    const isActive = formData.get('isActive') === 'on' // Checkbox zwraca 'on' lub null
 
-    if (!id || !name || !slug || !price) {
-        throw new Error('Brakuje wymaganych pól.')
-    }
+    // Checkbox jest specyficzny: jeśli jest zaznaczony, ma wartość "on", jeśli nie, jest `null`
+    const isActive = formData.get('isActive') === 'on'
 
+    // Odczytujemy listę zdjęć z ukrytego pola
+    const imagesString = formData.get('images') as string;
+    // Przekształcamy string "url1,url2,url3" w tablicę
+    const images = imagesString ? imagesString.split(',') : [];
+
+    // Aktualizujemy pokój w bazie danych o wszystkie nowe dane
     await prisma.room.update({
         where: { id },
         data: {
@@ -26,16 +35,15 @@ export async function updateRoom(formData: FormData) {
             slug,
             price,
             description,
+            images,
             duration,
             minPlayers,
             maxPlayers,
             isActive,
-            // Na razie pomijamy aktualizację zdjęć i trudności
         },
     })
 
-    // Odśwież widok listy pokoi, aby pokazać nowe dane
     revalidatePath('/admin')
-    // Przekieruj admina z powrotem na listę pokoi
+    revalidatePath(`/room/${slug}`) // Odświeżamy też publiczną stronę pokoju
     redirect('/admin')
 }
