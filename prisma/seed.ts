@@ -5,10 +5,8 @@ const prisma = new PrismaClient()
 async function main() {
     console.log('Seedowanie bazy danych...')
 
-    // Usuń stare pokoje
     await prisma.room.deleteMany()
 
-    // Dodaj przykładowe pokoje z wieloma zdjęciami
     await prisma.room.createMany({
         data: [
             {
@@ -64,8 +62,6 @@ async function main() {
             },
         ],
     })
-
-    console.log('✅ Seedowanie zakończone!')
 }
 
 main()

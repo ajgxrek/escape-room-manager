@@ -12,7 +12,7 @@ async function getRoom(slug: string) {
 }
 
 export default async function BookingPage({ params }: { params: Promise<{ slug: string }> }) {
-    const session = await auth() // Pobieramy sesję, ale już nie blokujemy strony
+    const session = await auth()
     const { slug } = await params
     const room = await getRoom(slug)
 

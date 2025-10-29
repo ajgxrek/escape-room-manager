@@ -12,7 +12,7 @@ type BookingFormProps = {
         maxPlayers: number
         price: number
     }
-    userId: string | undefined // Może być niezdefiniowany dla gościa
+    userId: string | undefined // niezdefiniowany dla gościa
     userEmail: string
     userName: string
     userPhone: string | null
@@ -53,7 +53,7 @@ export default function BookingForm({ room, userId, userEmail, userName, userPho
             // Czyścimy localStorage po użyciu
             localStorage.removeItem('pendingBooking');
         }
-    }, []); // Uruchamiamy tylko raz, po załadowaniu komponentu
+    }, []);
 
     useEffect(() => {
         if (formData.date) {
@@ -92,7 +92,7 @@ export default function BookingForm({ room, userId, userEmail, userName, userPho
             localStorage.setItem('pendingBooking', JSON.stringify(formData));
             // Rozpoczynamy proces logowania przez Google, mówiąc mu, żeby tu wrócił
             signIn('google', { callbackUrl: window.location.href });
-            return; // Zatrzymujemy dalsze działanie
+            return;
         }
 
         // Jeśli użytkownik JEST zalogowany, kontynuujemy jak wcześniej

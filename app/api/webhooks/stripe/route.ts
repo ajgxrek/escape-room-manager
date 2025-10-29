@@ -17,7 +17,7 @@ export async function POST(req: Request) {
     try {
         event = stripe.webhooks.constructEvent(body, signature, webhookSecret)
     } catch (error) {
-        // ZMIANA TUTAJ: Bezpieczna obsługa błędu bez użycia 'any'
+
         let message = 'Wystąpił nieznany błąd.';
         if (error instanceof Error) {
             message = error.message;

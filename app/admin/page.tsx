@@ -6,7 +6,7 @@ import { Resend } from 'resend'
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-// Definiujemy typ dla stanu akcji serwera
+
 type ActionState = {
     message: string;
 }
@@ -70,7 +70,6 @@ async function cancelBookingAsAdmin(formData: FormData) {
     revalidatePath('/admin');
 }
 
-// ZMIANA TUTAJ: Używamy naszego nowego typu `ActionState` zamiast `any`
 async function updateBookingStatus(prevState: ActionState, formData: FormData): Promise<ActionState> {
     'use server'
     const bookingId = formData.get('bookingId') as string;

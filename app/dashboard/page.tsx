@@ -9,7 +9,7 @@ type BookingWithDetails = Booking & {
     timeSlot: TimeSlot;
 };
 
-// ZMIANA TUTAJ: Usunęliśmy dyrektywę @ts-expect-error
+
 async function getUserBookings(userId: string): Promise<BookingWithDetails[]> {
     const bookings = await prisma.booking.findMany({
         where: { userId: userId, NOT: { status: 'CANCELLED' } },
@@ -19,7 +19,7 @@ async function getUserBookings(userId: string): Promise<BookingWithDetails[]> {
             { timeSlot: { startTime: 'asc' } }
         ]
     });
-    // Typ zwracany przez Prisma jest już poprawny
+
     return bookings;
 }
 

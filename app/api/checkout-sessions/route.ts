@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { roomId, date, time, playerCount, customerName, customerEmail, customerPhone, notes, roomName, price } = body;
 
-    // Używamy bezpiecznego tworzenia daty z poprzednich lekcji
+
     const targetDate = new Date(`${date}T12:00:00Z`);
 
     try {

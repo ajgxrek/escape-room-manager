@@ -12,7 +12,6 @@ type ActionState = {
 type BookingStatusUpdaterProps = {
     booking: Booking;
     possibleStatus: string[];
-    // Używamy precyzyjnego typu `ActionState` zamiast `any`
     updateAction: (prevState: ActionState, formData: FormData) => Promise<ActionState>;
 }
 
@@ -45,7 +44,7 @@ export default function BookingStatusUpdater({ booking, possibleStatus, updateAc
                     ))}
                 </select>
             </form>
-            {/* Wyświetlamy komunikat, naprawiając ostrzeżenie o nieużywanym `state` */}
+
             {state.message && <p className="text-xs text-gray-500 mt-1">{state.message}</p>}
         </div>
     );

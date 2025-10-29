@@ -17,7 +17,7 @@ export default async function Navbar() {
                             <form
                                 action={async () => {
                                     "use server"
-                                    await signOut()
+                                    await signOut({ redirectTo: '/' })
                                 }}
                             >
                                 <button type="submit" className="login">
@@ -25,7 +25,7 @@ export default async function Navbar() {
                                 </button>
                             </form>
 
-                            {/* ZMIANA TUTAJ: Warunkowy link w zależności od roli */}
+                            {/*  Warunkowy link w zależności od roli */}
                             {session.user.role === 'ADMIN' ? (
                                 // Jeśli użytkownik jest adminem, link prowadzi do /admin
                                 <Link href="/admin">

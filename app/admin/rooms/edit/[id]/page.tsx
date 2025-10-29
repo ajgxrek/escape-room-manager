@@ -12,9 +12,8 @@ async function getRoom(id: string) {
     return room;
 }
 
-// ZMIANA TUTAJ: Stosujemy ten sam "hack", co na stronie dashboardu
+
 export default async function EditRoomPage({ params }: { params: Promise<{ id: string }> }) {
-    // "Czekamy" na obietnicę, aby zadowolić kompilator
     const resolvedParams = await params;
     const room = await getRoom(resolvedParams.id);
 

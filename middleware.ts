@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/auth'
 
-// ZMIANA TUTAJ: Mówimy Next.js, aby używał środowiska Node.js dla tego pliku
+
 export const runtime = 'nodejs'
 
 export default auth((req) => {

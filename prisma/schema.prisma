@@ -46,7 +46,7 @@ model User {
   email         String?   @unique
   emailVerified DateTime?
   image         String?
-  phone         String? // <-- DODAJ TĘ LINIĘ
+  phone         String?
   role          String    @default("USER")
   accounts      Account[]
   sessions      Session[]
@@ -106,7 +106,7 @@ model Booking {
   playerCount     Int
   totalPrice      Float
   status          String   @default("PENDING") // PENDING, CONFIRMED, CANCELLED, COMPLETED
-  stripeSessionId String?  @unique // <-- DODAJ DOKŁADNIE TĘ LINIĘ
+  stripeSessionId String?  @unique
   customerName    String
   customerEmail   String
   customerPhone   String

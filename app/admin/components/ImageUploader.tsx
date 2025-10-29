@@ -62,7 +62,6 @@ export default function ImageUploader({ existingImages = [] }: ImageUploaderProp
                 </CldUploadWidget>
             </div>
 
-            {/* To ukryte pole prześle listę URL-i zdjęć razem z resztą formularza */}
             <input type="hidden" name="images" value={images.join(',')} />
         </div>
     );

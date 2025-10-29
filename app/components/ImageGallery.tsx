@@ -37,7 +37,6 @@ export default function ImageGallery({ images, roomName }: ImageGalleryProps) {
                 src={images[currentIndex]}
                 alt={`${roomName} - zdjęcie ${currentIndex + 1}`}
                 fill
-                // ZMIANA TUTAJ: Używamy niestandardowej pozycji `object-[center_33%]`
                 className="object-cover object-[center_33%]"
                 priority
             />

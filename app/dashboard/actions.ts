@@ -6,10 +6,10 @@ import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import { redirect } from "next/navigation"
 import Stripe from 'stripe'
-import { Resend } from 'resend' // <-- Dodaj ten import, jeśli go nie masz
+import { Resend } from 'resend'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
-const resend = new Resend(process.env.RESEND_API_KEY) // <-- Dodaj tę linię
+const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function cancelBooking(formData: FormData) {
     const session = await auth();
@@ -19,7 +19,7 @@ export async function cancelBooking(formData: FormData) {
         throw new Error('Brak autoryzacji lub ID rezerwacji.');
     }
 
-    // ZMIANA TUTAJ: Pobieramy więcej danych, aby użyć ich w e-mailu
+
     const booking = await prisma.booking.findUnique({
         where: { id: bookingId },
         include: {
@@ -32,7 +32,7 @@ export async function cancelBooking(formData: FormData) {
         throw new Error('Nie masz uprawnień do anulowania tej rezerwacji.');
     }
 
-    // Anulowanie rezerwacji i zwalnianie terminu (bez zmian)
+    // Anulowanie rezerwacji i zwalnianie terminu
     await prisma.booking.update({
         where: { id: bookingId },
         data: { status: 'CANCELLED' }
@@ -42,7 +42,7 @@ export async function cancelBooking(formData: FormData) {
         data: { isBooked: false }
     });
 
-    // NOWA CZĘŚĆ: Wyślij e-mail z potwierdzeniem anulowania
+    // Wyślij e-mail z potwierdzeniem anulowania
     try {
         await resend.emails.send({
             from: 'Booking <onboarding@resend.dev>',
@@ -52,15 +52,13 @@ export async function cancelBooking(formData: FormData) {
         });
     } catch (emailError) {
         console.error("Błąd wysyłania e-maila o anulowaniu:", emailError);
-        // Nawet jeśli e-mail się nie wyśle, kontynuujemy, bo rezerwacja jest już anulowana
+
     }
 
     revalidatePath('/dashboard');
 }
 
-// Funkcja retryPayment pozostaje bez zmian
 export async function retryPayment(formData: FormData) {
-    // ... (bez zmian)
     const session = await auth();
     const bookingId = formData.get('bookingId') as string;
 
