@@ -6,7 +6,7 @@ A comprehensive full-stack web application designed to manage escape room bookin
 
 ## Key Features
 
-### 👤 Client Portal
+### Client Portal
 * **Thematic Room Catalog:** Browse available rooms with server-side rendered data for SEO optimization.
 * **Live Bookings:** Interactive booking form with asynchronous, real-time fetching of available time slots.
 * **Secure Payments:** Full integration with **Stripe** supporting Card and BLIK transactions.
